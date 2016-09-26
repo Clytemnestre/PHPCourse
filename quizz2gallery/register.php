@@ -2,11 +2,10 @@
 
 require_once 'db.php';
 
-function getRegisterForm($name = "", $email = "") {
+function getRegisterForm($email = "") {
     return <<< ENDTAG
 <h1>Register user</h1>
 <form method="post">
-    Name: <input type="text" name="name" value="$name"><br>
     Email: <input type="text" name="email" value="$email"><br>
     Password: <input type="password" name="pass1"><br>
     Password (repeated) <input type="password" name="pass2"><br>
@@ -15,19 +14,15 @@ function getRegisterForm($name = "", $email = "") {
 ENDTAG;
 }
 
-if (!isset($_POST['name'])) {
+if (!isset($_POST['email'])) {
     // STATE 1: First show
     echo getRegisterForm();
 } else {
-    $name = $_POST['name'];
     $email = $_POST['email'];
     $pass1 = $_POST['pass1'];
     $pass2 = $_POST['pass2'];
-    // submission received - verify
     $errorList = array();
-    if (strlen($name) < 4) {
-        array_push($errorList, "Name must be at least 4 characters long");
-    }
+
     if (filter_var($email, FILTER_VALIDATE_EMAIL) === FALSE) {
         array_push($errorList, "Email does not look like a valid email");
     } else {
@@ -47,18 +42,15 @@ if (!isset($_POST['name'])) {
     } else if ($pass1 != $pass2) {
         array_push($errorList, "Passwords don't match");
     }
-    //
-    if ($errorList) {
-        // STATE 3: submission failed        
+    if ($errorList) {      
         echo "<ul>\n";
         foreach ($errorList as $error) {
             echo "<li>" . htmlspecialchars($error);
         }
         echo "</ul>\n\n";
-        echo getRegisterForm($name, $email);
+        echo getRegisterForm($email);
     } else {
-        // STATE 2: submission successful
-        $sql = sprintf("INSERT INTO users VALUES (NULL, '%s', '%s', '%s')", mysqli_escape_string($conn, $name), mysqli_escape_string($conn, $email), mysqli_escape_string($conn, $pass1));
+        $sql = sprintf("INSERT INTO users VALUES (NULL, '%s', '%s')", mysqli_escape_string($conn, $email), mysqli_escape_string($conn, $pass1));
         $result = mysqli_query($conn, $sql);
         if (!$result) {
             die("Error executing query [ $sql ] : " . mysqli_error($conn));
@@ -67,3 +59,4 @@ if (!isset($_POST['name'])) {
         echo '<a href="login.php">Click to login</a>';
     }
 }
+

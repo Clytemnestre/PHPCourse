@@ -1,4 +1,4 @@
-<h3>Add New Article</h3>
+<h3>Add New Picture</h3>
 
 <?php
 require_once 'db.php';
@@ -13,40 +13,29 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
-function getForm($subj = '', $bb = '') {
+function getForm($description = '') {
     $form = <<< ENDTAG
     <form method="POST" enctype="multipart/form-data">
     Picture: <input type="file" name="picFile"><br><br>
-    Subject: <input type="text" name="subject" value="$subj"><br><br>
-    Body: <textarea  rows="20" cols="50" name="body" value="$bb"></textarea><br><br>
-    <input type ="submit" value="Add Article"> 
+    description: <textarea  rows="20" cols="50" name="description" value="$description"></textarea><br><br>
+    <input type ="submit" value="Add picture"> 
 </form>  
 ENDTAG;
     return $form;
 }
 
-if (!isset($_POST['body'])) {
-    //First Show if no data is provided
+if (!isset($_POST['description'])) {
     echo getForm();
 } else {
-    //Receiving a submission
-    $subject = $_POST['subject'];
-    $body = $_POST['body'];
-    //Validate input 
+    $description = $_POST['description'];
     $errorList = array();
-    //Check if name is at least 4 characters long
-    if (strlen($subject) < 4) {
-        array_push($errorList, "Subject must be at least 4 characters long");
-    }
-    if (strlen($body) < 50) {
-        array_push($errorList, "Body must be at least 50 characters long");
+    if (strlen($description) < 4) {
+        array_push($errorList, "Description of the picture must be at least 4 characters long");
     }
     if (!isset($_FILES['picFile'])) {
-        // not receiving an upload of file - error!
         array_push($errorList, "You must select a picture for upload");
     } else {
         $fileUpload = $_FILES['picFile'];
-
         $check = getimagesize($fileUpload["tmp_name"]);
         if (!$check) {
             array_push($errorList, "File upload was not an image file.");
@@ -56,8 +45,6 @@ if (!isset($_POST['body'])) {
             array_push($errorList, "Error: File to big, maximuma accepted is $max_file_size bytes");
         }
     }
-
-    //Display error messages if invalid data is submitted
     if ($errorList) {
         //submission failed
         echo "<h5>Problems  found in your submission</h5>\n";
@@ -66,34 +53,27 @@ if (!isset($_POST['body'])) {
             echo "<li>" . htmlspecialchars($error) . "</li>";
         }
         echo "</ul><br><br><br><hr>";
-        echo getForm($subject, $body);
+        echo getForm($description);
     } else {
-        //submition succesfull
         $file_name = preg_replace('/[^A-Za-z0-9\-]/', '_', $fileUpload['name']);
         $file_extension = explode('/', $check['mime'])[1];
         $target_file = $target_dir . date("Ymd-His-") . $file_name . '.' . $file_extension;
-        // echo "file will be named: " . $target_file;
         if (move_uploaded_file($fileUpload["tmp_name"], $target_file)) {
             echo "The file " . basename($fileUpload["name"]) . " has been uploaded.";
         } else {
             die("Fatal error: There was an server-side error handling the upload of your file.");
         }
-        //
-        $sql = sprintf("INSERT INTO articles VALUES (NULL, '%s', '%s', '%s', '%s', '%s')",
+        $sql = sprintf("INSERT INTO pictures VALUES (NULL, '%s', '%s', '%s')",
                 mysqli_escape_string($conn, $_SESSION['user']['ID']),
-                mysqli_escape_string($conn, date("Y-m-d")),
-                mysqli_escape_string($conn, $subject),
-                mysqli_escape_string($conn, $body),
-                mysqli_escape_string($conn, $target_file));
+                mysqli_escape_string($conn, $target_file),
+                mysqli_escape_string($conn, $description));
         $result = mysqli_query($conn, $sql);
         if (!$result) {
             echo "Error executing query [$sql] : " . mysqli_error($conn);
         } else {
-            echo "The article was posted succesfully<br><br>\n";
+            echo "The picutre was posted succesfully<br><br>\n";
             echo "<a href=\"index.php\">Go to home page</a>";
         }
     }
 }
-
-
 
